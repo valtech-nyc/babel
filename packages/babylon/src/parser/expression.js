@@ -294,12 +294,19 @@ export default class ExpressionParser extends LValParser {
 
         const startPos = this.state.start;
         const startLoc = this.state.startLoc;
-        const maxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
+
+        const outerMaxNumOfResolvableTopics = this.state
+          .maxNumOfResolvableTopics;
+        const outerMaxTopicIndex = this.state.maxTopicIndex;
 
         if (node.operator === "|>") {
           this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
           if (this.hasPlugin("smartPipelines")) {
+            // If smartPipelines plugin is active, then enable the use of
+            // the primary topic reference.
             this.state.maxNumOfResolvableTopics = 1;
+            // Hide the use of any topic references from outer contexts.
+            this.state.maxTopicIndex = undefined;
           } else if (this.hasPlugin("pipelineOperator")) {
             // pipelineOperator supports syntax such as 10 |> x => x + 1.
             // In contrast, smartPipelines would require parentheses
@@ -324,8 +331,9 @@ export default class ExpressionParser extends LValParser {
             startPos,
             startLoc,
           );
-          this.state.maxNumOfResolvableTopics = maxNumOfResolvableTopics;
-          // TODO: Reset this.state.maxTopicIndex
+
+          this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
+          this.state.maxTopicIndex = outerMaxTopicIndex;
         }
 
         this.finishNode(
@@ -880,9 +888,10 @@ export default class ExpressionParser extends LValParser {
       case tt.primaryTopic: {
         this.expectPlugin(["smartPipelines"]);
         node = this.startNode();
+
         this.next();
         if (this.state.maxNumOfResolvableTopics) {
-          this.state.maxTopicIndex = this.state.maxTopicIndex || 1;
+          this.state.maxTopicIndex = this.state.maxTopicIndex || 0;
           return this.finishNode(node, "PrimaryTopicReference");
         } else {
           throw this.raise(
@@ -1915,7 +1924,7 @@ export default class ExpressionParser extends LValParser {
         bodyNode.callee = childExpression.argument;
         break;
       case "PipelineTopicExpression":
-        if (this.state.maxTopicIndex !== 1) {
+        if (this.state.maxTopicIndex !== 0) {
           throw this.raise(
             startPos,
             `Pipeline is in topic style but does not use topic reference`,
