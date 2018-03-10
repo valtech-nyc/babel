@@ -15,7 +15,7 @@
 // Acorn uses an [operator precedence parser][opp] to handle binary
 // operator precedence, because it is much more compact than using
 // the technique outlined above, which uses different, nesting
-// functions to specify precedence, for all of the ten binary
+// functions to specify precedence, for all of the binary
 // precedence levels that JavaScript defines.
 //
 // [opp]: http://en.wikipedia.org/wiki/Operator-precedence_parser
@@ -294,14 +294,18 @@ export default class ExpressionParser extends LValParser {
 
         const startPos = this.state.start;
         const startLoc = this.state.startLoc;
+        const maxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
 
         if (node.operator === "|>") {
-          this.expectPlugin("pipelineOperator");
-          // Support syntax such as 10 |> x => x + 1
-          this.state.potentialArrowAt = startPos;
-        }
-
-        if (node.operator === "??") {
+          this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
+          if (this.hasPlugin("smartPipelines")) {
+            this.state.maxNumOfResolvableTopics = 1;
+          } else if (this.hasPlugin("pipelineOperator")) {
+            // pipelineOperator supports syntax such as 10 |> x => x + 1.
+            // Smart pipelines would require parentheses around arrow functions.
+            this.state.potentialArrowAt = startPos;
+          }
+        } else if (node.operator === "??") {
           this.expectPlugin("nullishCoalescingOperator");
         }
 
@@ -312,6 +316,16 @@ export default class ExpressionParser extends LValParser {
           op.rightAssociative ? prec - 1 : prec,
           noIn,
         );
+
+        if (node.operator === "|>" && this.hasPlugin("smartPipelines")) {
+          node.right = this.parseSmartPipelineBody(
+            node.right,
+            startPos,
+            startLoc,
+          );
+          this.state.maxNumOfResolvableTopics = maxNumOfResolvableTopics;
+          // TODO: Reset this.state.maxTopicIndex
+        }
 
         this.finishNode(
           node,
@@ -858,6 +872,21 @@ export default class ExpressionParser extends LValParser {
           throw this.raise(
             callee.start,
             "Binding should be performed on object property.",
+          );
+        }
+      }
+
+      case tt.primaryTopic: {
+        this.expectPlugin(["smartPipelines"]);
+        node = this.startNode();
+        this.next();
+        if (this.state.maxNumOfResolvableTopics) {
+          this.state.maxTopicIndex = this.state.maxTopicIndex || 1;
+          return this.finishNode(node, "PrimaryTopicReference");
+        } else {
+          throw this.raise(
+            node.start,
+            `Topic reference was used in a lexical context without topic binding`,
           );
         }
       }
@@ -1865,5 +1894,23 @@ export default class ExpressionParser extends LValParser {
       node.argument = this.parseMaybeAssign();
     }
     return this.finishNode(node, "YieldExpression");
+  }
+
+  // Parses smart pipeline expressions.
+
+  parseSmartPipelineBody(
+    childNode: N.Expression,
+    startPos: number,
+    startLoc: Location,
+  ): N.PipelineExpression {
+    const bodyNode = this.startNodeAt(startPos, startLoc);
+    if (this.state.maxTopicIndex !== 1) {
+      throw this.raise(
+        startPos,
+        `Pipeline is in topic style but does not use topic reference`,
+      );
+    }
+    bodyNode.child = childNode;
+    return this.finishNode(bodyNode, "PipelineTopicBody");
   }
 }

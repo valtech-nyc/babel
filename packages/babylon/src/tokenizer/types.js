@@ -86,6 +86,7 @@ export const types: { [name: string]: TokenType } = {
   regexp: new TokenType("regexp", { startsExpr }),
   string: new TokenType("string", { startsExpr }),
   name: new TokenType("name", { startsExpr }),
+  primaryTopic: new TokenType("#", { startsExpr }),
   eof: new TokenType("eof"),
 
   // Punctuation token types.

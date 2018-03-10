@@ -554,6 +554,28 @@ export type SequenceExpression = NodeBase & {
   expressions: $ReadOnlyArray<Expression>,
 };
 
+// Pipelines
+
+export type PipelineBody = NodeBase & {
+  type: "PipelineBody",
+};
+
+export type PipelineBareFunctionCallBody = PipelineBody & {
+  type: "PipelineBareFunctionCallBody",
+};
+
+export type PipelineBareConstructorCallBody = PipelineBody & {
+  type: "PipelineBareConstructorCallBody",
+};
+
+export type PipelineBareAwaitedFunctionCallBody = PipelineBody & {
+  type: "PipelineBareAwaitedFunctionCallBody",
+};
+
+export type PipelineTopicBody = PipelineBody & {
+  type: "PipelineTopicBody",
+};
+
 // Template Literals
 
 export type TemplateLiteral = NodeBase & {

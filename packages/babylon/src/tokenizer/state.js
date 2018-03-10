@@ -23,6 +23,9 @@ export default class State {
     // eslint-disable-next-line max-len
     this.inMethod = this.inFunction = this.inParameters = this.maybeInArrowParameters = this.inGenerator = this.inAsync = this.inPropertyName = this.inType = this.inClassProperty = this.noAnonFunctionType = false;
 
+    this.maxNumOfResolvableTopics = 0;
+    this.maxTopicIndex = undefined;
+
     this.classLevel = 0;
 
     this.labels = [];
@@ -98,6 +101,17 @@ export default class State {
   noAnonFunctionType: boolean;
   inPropertyName: boolean;
   inClassProperty: boolean;
+
+  // For the smartPipelines plugin: When a topic binding has been currently
+  // established, then this is 1. Otherwise, it is 0. This is forwards
+  // compatible with a future plugin for multiple lexical topics.
+  maxNumOfResolvableTopics: number;
+
+  // For the smartPipelines plugin: When a topic binding has been currently
+  // established, and if that binding has been used as a topic reference `#`,
+  // then this is 0. Otherwise, it is `undefined`. This is forwards compatible
+  // with a future plugin for multiple lexical topics.
+  maxTopicIndex: undefined | 0;
 
   // Check whether we are in a (nested) class or not.
   classLevel: number;
