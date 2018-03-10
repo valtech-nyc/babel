@@ -302,7 +302,8 @@ export default class ExpressionParser extends LValParser {
             this.state.maxNumOfResolvableTopics = 1;
           } else if (this.hasPlugin("pipelineOperator")) {
             // pipelineOperator supports syntax such as 10 |> x => x + 1.
-            // Smart pipelines would require parentheses around arrow functions.
+            // In contrast, smartPipelines would require parentheses
+            // around the arrow function.
             this.state.potentialArrowAt = startPos;
           }
         } else if (node.operator === "??") {
@@ -1896,21 +1897,68 @@ export default class ExpressionParser extends LValParser {
     return this.finishNode(node, "YieldExpression");
   }
 
-  // Parses smart pipeline expressions.
-
   parseSmartPipelineBody(
-    childNode: N.Expression,
+    childExpression: N.Expression,
     startPos: number,
     startLoc: Location,
   ): N.PipelineExpression {
     const bodyNode = this.startNodeAt(startPos, startLoc);
-    if (this.state.maxTopicIndex !== 1) {
-      throw this.raise(
-        startPos,
-        `Pipeline is in topic style but does not use topic reference`,
-      );
+    const pipelineStyle = this.checkPipelineBodyStyle(childExpression);
+    switch (pipelineStyle) {
+      case "PipelineBareFunctionCall":
+        bodyNode.callee = childExpression.callee;
+        break;
+      case "PipelineBareConstructorCall":
+        bodyNode.callee = childExpression.callee;
+        break;
+      case "PipelineBareAwaitedFunctionCall":
+        bodyNode.callee = childExpression.argument;
+        break;
+      case "PipelineTopicExpression":
+        if (this.state.maxTopicIndex !== 1) {
+          throw this.raise(
+            startPos,
+            `Pipeline is in topic style but does not use topic reference`,
+          );
+        }
+        break;
+      default:
+        throw this.raise(startPos, `Unknown pipeline style ${pipelineStyle}`);
     }
-    bodyNode.child = childNode;
-    return this.finishNode(bodyNode, "PipelineTopicBody");
+    return this.finishNode(bodyNode, pipelineStyle);
+  }
+
+  checkPipelineBodyStyle(
+    expression: N.Expression,
+  ):
+    | "PipelineBareFunctionCall"
+    | "PipelineBareConstructorCall"
+    | "PipelineBareAwaitedFunctionCall"
+    | "PipelineTopicExpression" {
+    switch (expression.type) {
+      case "NewExpression":
+        return this.isSimpleReference(expression.callee)
+          ? "PipelineBareConstructorCall"
+          : "PipelineTopicExpression";
+      case "AwaitExpression":
+        return this.isSimpleReference(expression.argument)
+          ? "PipelineBareAwaitedFunctionCall"
+          : "PipelineTopicExpression";
+      default:
+        return this.isSimpleReference(expression)
+          ? "PipelineBareFunctionCall"
+          : "PipelineTopicExpression";
+    }
+  }
+
+  isSimpleReference(expression: N.Expression): boolean {
+    switch (expression.type) {
+      case "MemberExpression":
+        return this.isSimpleReference(expression.object);
+      case "Identifier":
+        return true;
+      default:
+        return false;
+    }
   }
 }

@@ -562,18 +562,22 @@ export type PipelineBody = NodeBase & {
 
 export type PipelineBareFunctionCallBody = PipelineBody & {
   type: "PipelineBareFunctionCallBody",
+  callee: Expression,
 };
 
 export type PipelineBareConstructorCallBody = PipelineBody & {
   type: "PipelineBareConstructorCallBody",
+  callee: Expression,
 };
 
 export type PipelineBareAwaitedFunctionCallBody = PipelineBody & {
   type: "PipelineBareAwaitedFunctionCallBody",
+  callee: Expression,
 };
 
 export type PipelineTopicBody = PipelineBody & {
   type: "PipelineTopicBody",
+  expression: Expression,
 };
 
 // Template Literals
