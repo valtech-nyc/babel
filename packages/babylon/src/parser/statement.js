@@ -447,14 +447,6 @@ export default class StatementParser extends ExpressionParser {
     this.expect(tt.braceL);
     this.state.labels.push(switchLabel);
 
-    // For the smartPipelines plugin:
-    // Disable topic references from outer contexts within the loop body.
-    // They are permitted in test expressions, outside of the loop body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
-
     // Statements under must be grouped (by label) in SwitchCase
     // nodes. `cur` is used to keep the node that we are currently
     // adding statements to.
@@ -489,9 +481,6 @@ export default class StatementParser extends ExpressionParser {
     this.next(); // Closing brace
 
     this.state.labels.pop();
-    // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
 
     return this.finishNode(node, "SwitchStatement");
   }

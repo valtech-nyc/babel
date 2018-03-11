@@ -1,4 +1,0 @@
-{
-  "plugins": ["smartPipelines", "doExpressions"],
-  "throws": "Topic reference was used in a lexical context without topic binding (4:12)"
-}
