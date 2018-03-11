@@ -213,6 +213,57 @@
                                 "line": 3,
                                 "column": 11
                               }
+                            },
+                            "expression": {
+                              "type": "BinaryExpression",
+                              "start": 51,
+                              "end": 57,
+                              "loc": {
+                                "start": {
+                                  "line": 3,
+                                  "column": 5
+                                },
+                                "end": {
+                                  "line": 3,
+                                  "column": 11
+                                }
+                              },
+                              "left": {
+                                "type": "PrimaryTopicReference",
+                                "start": 51,
+                                "end": 52,
+                                "loc": {
+                                  "start": {
+                                    "line": 3,
+                                    "column": 5
+                                  },
+                                  "end": {
+                                    "line": 3,
+                                    "column": 6
+                                  }
+                                }
+                              },
+                              "operator": "+",
+                              "right": {
+                                "type": "StringLiteral",
+                                "start": 55,
+                                "end": 57,
+                                "loc": {
+                                  "start": {
+                                    "line": 3,
+                                    "column": 9
+                                  },
+                                  "end": {
+                                    "line": 3,
+                                    "column": 11
+                                  }
+                                },
+                                "extra": {
+                                  "rawValue": "",
+                                  "raw": "''"
+                                },
+                                "value": ""
+                              }
                             }
                           }
                         },

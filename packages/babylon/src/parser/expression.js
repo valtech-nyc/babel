@@ -1930,6 +1930,7 @@ export default class ExpressionParser extends LValParser {
             `Pipeline is in topic style but does not use topic reference`,
           );
         }
+        bodyNode.expression = childExpression;
         break;
       default:
         throw this.raise(startPos, `Unknown pipeline style ${pipelineStyle}`);

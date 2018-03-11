@@ -215,6 +215,57 @@
                       "line": 2,
                       "column": 35
                     }
+                  },
+                  "expression": {
+                    "type": "BinaryExpression",
+                    "start": 53,
+                    "end": 58,
+                    "loc": {
+                      "start": {
+                        "line": 2,
+                        "column": 30
+                      },
+                      "end": {
+                        "line": 2,
+                        "column": 35
+                      }
+                    },
+                    "left": {
+                      "type": "PrimaryTopicReference",
+                      "start": 53,
+                      "end": 54,
+                      "loc": {
+                        "start": {
+                          "line": 2,
+                          "column": 30
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 31
+                        }
+                      }
+                    },
+                    "operator": "+",
+                    "right": {
+                      "type": "NumericLiteral",
+                      "start": 57,
+                      "end": 58,
+                      "loc": {
+                        "start": {
+                          "line": 2,
+                          "column": 34
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 35
+                        }
+                      },
+                      "extra": {
+                        "rawValue": 1,
+                        "raw": "1"
+                      },
+                      "value": 1
+                    }
                   }
                 }
               }

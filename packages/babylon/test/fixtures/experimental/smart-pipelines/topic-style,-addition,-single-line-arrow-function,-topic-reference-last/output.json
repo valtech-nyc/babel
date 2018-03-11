@@ -87,6 +87,57 @@
                 "line": 1,
                 "column": 14
               }
+            },
+            "expression": {
+              "type": "BinaryExpression",
+              "start": 9,
+              "end": 14,
+              "loc": {
+                "start": {
+                  "line": 1,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1,
+                  "column": 14
+                }
+              },
+              "left": {
+                "type": "NumericLiteral",
+                "start": 9,
+                "end": 10,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 9
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 10
+                  }
+                },
+                "extra": {
+                  "rawValue": 1,
+                  "raw": "1"
+                },
+                "value": 1
+              },
+              "operator": "+",
+              "right": {
+                "type": "PrimaryTopicReference",
+                "start": 13,
+                "end": 14,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 13
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 14
+                  }
+                }
+              }
             }
           }
         }
