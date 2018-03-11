@@ -820,6 +820,16 @@ export default class StatementParser extends ExpressionParser {
     if (isStatement) this.state.inGenerator = node.generator;
 
     this.parseFunctionParams(node);
+
+    // For the smartPipelines plugin:
+    // Disable topic references from outer contexts within the function body.
+    // They are permitted in function default-parameter expressions, which are
+    // part of the outer context, outside of the function body.
+    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
+    this.state.maxNumOfResolvableTopics = 0;
+    const outerMaxTopicIndex = this.state.maxTopicIndex;
+    this.state.outerMaxTopicIndex = undefined;
+
     this.parseFunctionBodyAndFinish(
       node,
       isStatement ? "FunctionDeclaration" : "FunctionExpression",
@@ -829,6 +839,8 @@ export default class StatementParser extends ExpressionParser {
     this.state.inFunction = oldInFunc;
     this.state.inMethod = oldInMethod;
     this.state.inGenerator = oldInGenerator;
+    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
+    this.state.maxTopicIndex = outerMaxTopicIndex;
 
     return node;
   }
