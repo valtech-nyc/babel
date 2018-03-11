@@ -321,8 +321,22 @@ export default class StatementParser extends ExpressionParser {
   parseDoStatement(node: N.DoWhileStatement): N.DoWhileStatement {
     this.next();
     this.state.labels.push(loopLabel);
+
+    // For the smartPipelines plugin:
+    // Disable topic references from outer contexts within the loop body.
+    // They are permitted in test expressions, outside of the loop body.
+    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
+    this.state.maxNumOfResolvableTopics = 0;
+    const outerMaxTopicIndex = this.state.maxTopicIndex;
+    this.state.outerMaxTopicIndex = undefined;
+
     node.body = this.parseStatement(false);
+
     this.state.labels.pop();
+    // Restore previous topic-binding state.
+    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
+    this.state.maxTopicIndex = outerMaxTopicIndex;
+
     this.expect(tt._while);
     node.test = this.parseParenExpression();
     this.eat(tt.semi);
