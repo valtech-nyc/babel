@@ -719,8 +719,22 @@ export default class StatementParser extends ExpressionParser {
     node.left = init;
     node.right = this.parseExpression();
     this.expect(tt.parenR);
+
+    // For the smartPipelines plugin:
+    // Disable topic references from outer contexts within the loop body.
+    // They are permitted in test expressions, which are
+    // part of the outer context, outside of the loop body.
+    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
+    this.state.maxNumOfResolvableTopics = 0;
+    const outerMaxTopicIndex = this.state.maxTopicIndex;
+    this.state.outerMaxTopicIndex = undefined;
+
     node.body = this.parseStatement(false);
     this.state.labels.pop();
+
+    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
+    this.state.maxTopicIndex = outerMaxTopicIndex;
+
     return this.finishNode(node, type);
   }
 
@@ -839,6 +853,7 @@ export default class StatementParser extends ExpressionParser {
     this.state.inFunction = oldInFunc;
     this.state.inMethod = oldInMethod;
     this.state.inGenerator = oldInGenerator;
+
     this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
     this.state.maxTopicIndex = outerMaxTopicIndex;
 
