@@ -332,6 +332,7 @@ export default class ExpressionParser extends LValParser {
             startLoc,
           );
 
+          // Restore previous topic-binding state.
           this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
           this.state.maxTopicIndex = outerMaxTopicIndex;
         }
