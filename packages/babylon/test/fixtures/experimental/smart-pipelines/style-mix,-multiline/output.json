@@ -269,7 +269,7 @@
                         },
                         "operator": "|>",
                         "right": {
-                          "type": "PipelineBareConstructorCall",
+                          "type": "PipelineBareConstructor",
                           "start": 63,
                           "end": 76,
                           "loc": {
@@ -303,7 +303,7 @@
                       },
                       "operator": "|>",
                       "right": {
-                        "type": "PipelineBareFunctionCall",
+                        "type": "PipelineBareFunction",
                         "start": 82,
                         "end": 92,
                         "loc": {
@@ -320,7 +320,7 @@
                     },
                     "operator": "|>",
                     "right": {
-                      "type": "PipelineBareAwaitedFunctionCall",
+                      "type": "PipelineBareAwaitedFunction",
                       "start": 98,
                       "end": 111,
                       "loc": {

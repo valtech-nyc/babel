@@ -119,7 +119,7 @@
               },
               "operator": "|>",
               "right": {
-                "type": "PipelineBareFunctionCall",
+                "type": "PipelineBareFunction",
                 "start": 11,
                 "end": 12,
                 "loc": {

@@ -124,7 +124,7 @@
                 },
                 "operator": "|>",
                 "right": {
-                  "type": "PipelineBareAwaitedFunctionCall",
+                  "type": "PipelineBareAwaitedFunction",
                   "start": 34,
                   "end": 45,
                   "loc": {

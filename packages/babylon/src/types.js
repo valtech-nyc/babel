@@ -560,18 +560,18 @@ export type PipelineBody = NodeBase & {
   type: "PipelineBody",
 };
 
-export type PipelineBareFunctionCallBody = PipelineBody & {
-  type: "PipelineBareFunctionCallBody",
+export type PipelineBareFunctionBody = PipelineBody & {
+  type: "PipelineBareFunctionBody",
   callee: Expression,
 };
 
-export type PipelineBareConstructorCallBody = PipelineBody & {
-  type: "PipelineBareConstructorCallBody",
+export type PipelineBareConstructorBody = PipelineBody & {
+  type: "PipelineBareConstructorBody",
   callee: Expression,
 };
 
-export type PipelineBareAwaitedFunctionCallBody = PipelineBody & {
-  type: "PipelineBareAwaitedFunctionCallBody",
+export type PipelineBareAwaitedFunctionBody = PipelineBody & {
+  type: "PipelineBareAwaitedFunctionBody",
   callee: Expression,
 };
 

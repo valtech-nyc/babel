@@ -152,7 +152,7 @@
                     },
                     "operator": "|>",
                     "right": {
-                      "type": "PipelineBareFunctionCall",
+                      "type": "PipelineBareFunction",
                       "start": 30,
                       "end": 33,
                       "loc": {
@@ -169,7 +169,7 @@
                   },
                   "operator": "|>",
                   "right": {
-                    "type": "PipelineBareAwaitedFunctionCall",
+                    "type": "PipelineBareAwaitedFunction",
                     "start": 37,
                     "end": 49,
                     "loc": {

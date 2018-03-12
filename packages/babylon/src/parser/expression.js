@@ -1952,7 +1952,7 @@ export default class ExpressionParser extends LValParser {
       startPos,
     );
 
-    return this.parsePipelineBodyInStyle(
+    return this.parseSmartPipelineBodyInStyle(
       childExpression,
       pipelineStyle,
       startPos,
@@ -1983,7 +1983,7 @@ export default class ExpressionParser extends LValParser {
     }
   }
 
-  parsePipelineBodyInStyle(
+  parseSmartPipelineBodyInStyle(
     childExpression: N.Expression,
     pipelineStyle: PipelineStyle,
     startPos: number,
@@ -1991,13 +1991,13 @@ export default class ExpressionParser extends LValParser {
   ): N.PipelineExpression {
     const bodyNode = this.startNodeAt(startPos, startLoc);
     switch (pipelineStyle) {
-      case "PipelineBareFunctionCall":
+      case "PipelineBareFunction":
         bodyNode.callee = childExpression.callee;
         break;
-      case "PipelineBareConstructorCall":
+      case "PipelineBareConstructor":
         bodyNode.callee = childExpression.callee;
         break;
-      case "PipelineBareAwaitedFunctionCall":
+      case "PipelineBareAwaitedFunction":
         bodyNode.callee = childExpression.argument;
         break;
       case "PipelineTopicExpression":
@@ -2018,22 +2018,22 @@ export default class ExpressionParser extends LValParser {
   checkSmartPipelineBodyStyle(
     expression: N.Expression,
   ):
-    | "PipelineBareFunctionCall"
-    | "PipelineBareConstructorCall"
-    | "PipelineBareAwaitedFunctionCall"
+    | "PipelineBareFunction"
+    | "PipelineBareConstructor"
+    | "PipelineBareAwaitedFunction"
     | "PipelineTopicExpression" {
     switch (expression.type) {
       case "NewExpression":
         return this.isSimpleReference(expression.callee)
-          ? "PipelineBareConstructorCall"
+          ? "PipelineBareConstructor"
           : "PipelineTopicExpression";
       case "AwaitExpression":
         return this.isSimpleReference(expression.argument)
-          ? "PipelineBareAwaitedFunctionCall"
+          ? "PipelineBareAwaitedFunction"
           : "PipelineTopicExpression";
       default:
         return this.isSimpleReference(expression)
-          ? "PipelineBareFunctionCall"
+          ? "PipelineBareFunction"
           : "PipelineTopicExpression";
     }
   }
@@ -2100,7 +2100,7 @@ export default class ExpressionParser extends LValParser {
 }
 
 type PipelineStyle =
-  | "PipelineBareConstructorCall"
-  | "PipelineBareConstructorCall"
-  | "PipelineBareAwaitedFunctionCall"
+  | "PipelineBareFunction"
+  | "PipelineBareConstructor"
+  | "PipelineBareAwaitedFunction"
   | "PipelineTopicExpression";
