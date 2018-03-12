@@ -21,6 +21,7 @@
 // [opp]: http://en.wikipedia.org/wiki/Operator-precedence_parser
 
 import { types as tt, type TokenType } from "../tokenizer/types";
+import { TopicContextState } from "../tokenizer/state";
 import * as N from "../types";
 import LValParser from "./lval";
 import { reservedWords } from "../util/identifier";
@@ -295,32 +296,10 @@ export default class ExpressionParser extends LValParser {
         const startPos = this.state.start;
         const startLoc = this.state.startLoc;
 
-        const outerMaxNumOfResolvableTopics = this.state
-          .maxNumOfResolvableTopics;
-        const outerMaxTopicIndex = this.state.maxTopicIndex;
+        const outerTopicState = this.readTopicContextState();
 
         if (node.operator === "|>") {
-          this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
-          if (this.hasPlugin("smartPipelines")) {
-            // If the smartPipelines plugin is active, then:
-            // Ensure that the pipeline head is not a sequence expression.
-            if (left.type === "SequenceExpression") {
-              throw this.raise(
-                leftStartPos,
-                `Pipeline head cannot be a sequence expression`,
-              );
-            }
-            // Enable the use of the primary topic reference.
-            this.state.maxNumOfResolvableTopics = 1;
-            // Hide the use of any topic references from outer contexts.
-            this.state.maxTopicIndex = undefined;
-          } else if (this.hasPlugin("pipelineOperator")) {
-            // If the alternative pipelineOperator plugin is active, then:
-            // pipelineOperator supports syntax such as 10 |> x => x + 1.
-            // In contrast, smartPipelines would require parentheses
-            // around the arrow function.
-            this.state.potentialArrowAt = startPos;
-          }
+          this.parsePipelineInfixOperator(left, leftStartPos);
         } else if (node.operator === "??") {
           this.expectPlugin("nullishCoalescingOperator");
         }
@@ -334,33 +313,14 @@ export default class ExpressionParser extends LValParser {
         );
 
         if (node.operator === "|>" && this.hasPlugin("smartPipelines")) {
-          const pipelineBodyNode = (node.right = this.parseSmartPipelineBody(
+          node.right = this.parseSmartPipelineBody(
             node.right,
             startPos,
             startLoc,
-          ));
-
-          // Check for a following arrow `=>`, for a human-friendly error
-          // instead of something like 'Unexpected token, expected ";"'.
-          if (this.match(tt.arrow)) {
-            throw this.raise(
-              this.state.start,
-              `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`,
-            );
-          } else if (
-            pipelineBodyNode.type === "PipelineTopicExpression" &&
-            pipelineBodyNode.expression.type === "SequenceExpression"
-          ) {
-            throw this.raise(
-              startPos,
-              `Pipeline body cannot be a sequence expression`,
-            );
-          }
-
-          // Restore previous topic-binding state.
-          this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-          this.state.maxTopicIndex = outerMaxTopicIndex;
+          );
         }
+
+        this.exitTopicContext(outerTopicState);
 
         this.finishNode(
           node,
@@ -911,13 +871,13 @@ export default class ExpressionParser extends LValParser {
         }
       }
 
-      case tt.primaryTopic: {
+      case tt.primaryTopicReference: {
         this.expectPlugin(["smartPipelines"]);
         node = this.startNode();
 
         this.next();
-        if (this.state.maxNumOfResolvableTopics) {
-          this.state.maxTopicIndex = this.state.maxTopicIndex || 0;
+        if (this.primaryTopicReferenceIsAllowedInCurrentTopicContext()) {
+          this.registerTopicReference();
           return this.finishNode(node, "PrimaryTopicReference");
         } else {
           throw this.raise(
@@ -1932,13 +1892,90 @@ export default class ExpressionParser extends LValParser {
     return this.finishNode(node, "YieldExpression");
   }
 
+  // Parses a pipeline (for any of the pipeline Babylon plugins) at the point
+  // of the infix operator `|>`.
+
+  parsePipelineInfixOperator(left: N.Expression, leftStartPos: Position) {
+    this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
+    if (this.hasPlugin("smartPipelines")) {
+      this.checkSmartPipelineHeadEarlyErrors(left, leftStartPos);
+      // Enable the use of the primary topic reference and hide any usage
+      // of topic references in the outer context.
+      this.enterTopicPermittingContext();
+    } else if (this.hasPlugin("pipelineOperator")) {
+      // If the alternative pipelineOperator plugin is active, then:
+      // pipelineOperator supports syntax such as 10 |> x => x + 1.
+      // In contrast, smartPipelines would require parentheses
+      // around the arrow function.
+      this.state.potentialArrowAt = this.state.start;
+    }
+  }
+
+  checkSmartPipelineHeadEarlyErrors(
+    left: N.Expression,
+    leftStartPos: Position,
+  ) {
+    if (left.type === "SequenceExpression") {
+      // Ensure that the pipeline head is not a comma-delimited
+      // sequence expression.
+      throw this.raise(
+        leftStartPos,
+        `Pipeline head cannot be a sequence expression`,
+      );
+    }
+  }
+
   parseSmartPipelineBody(
     childExpression: N.Expression,
     startPos: number,
     startLoc: Location,
   ): N.PipelineExpression {
+    const pipelineStyle = this.checkSmartPipelineBodyStyle(childExpression);
+
+    this.checkSmartPipelineBodyEarlyErrors(
+      childExpression,
+      pipelineStyle,
+      startPos,
+    );
+
+    return this.parsePipelineBodyInStyle(
+      childExpression,
+      pipelineStyle,
+      startPos,
+      startLoc,
+    );
+  }
+
+  checkSmartPipelineBodyEarlyErrors(
+    childExpression: N.Expression,
+    pipelineStyle: PipelineStyle,
+    startPos: number,
+  ): N.PipelineExpression {
+    if (this.match(tt.arrow)) {
+      // If the following token is invalidly `=>`, then throw a human-friendly error
+      // instead of something like 'Unexpected token, expected ";"'.
+      throw this.raise(
+        this.state.start,
+        `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`,
+      );
+    } else if (
+      pipelineStyle === "PipelineTopicExpression" &&
+      childExpression.type === "SequenceExpression"
+    ) {
+      throw this.raise(
+        startPos,
+        `Pipeline body cannot be a sequence expression`,
+      );
+    }
+  }
+
+  parsePipelineBodyInStyle(
+    childExpression: N.Expression,
+    pipelineStyle: PipelineStyle,
+    startPos: number,
+    startLoc: Location,
+  ): N.PipelineExpression {
     const bodyNode = this.startNodeAt(startPos, startLoc);
-    const pipelineStyle = this.checkPipelineBodyStyle(childExpression);
     switch (pipelineStyle) {
       case "PipelineBareFunctionCall":
         bodyNode.callee = childExpression.callee;
@@ -1950,7 +1987,7 @@ export default class ExpressionParser extends LValParser {
         bodyNode.callee = childExpression.argument;
         break;
       case "PipelineTopicExpression":
-        if (this.state.maxTopicIndex !== 0) {
+        if (!this.topicReferenceWasUsedInCurrentTopicContext()) {
           throw this.raise(
             startPos,
             `Pipeline is in topic style but does not use topic reference`,
@@ -1964,7 +2001,7 @@ export default class ExpressionParser extends LValParser {
     return this.finishNode(bodyNode, pipelineStyle);
   }
 
-  checkPipelineBodyStyle(
+  checkSmartPipelineBodyStyle(
     expression: N.Expression,
   ):
     | "PipelineBareFunctionCall"
@@ -1997,4 +2034,59 @@ export default class ExpressionParser extends LValParser {
         return false;
     }
   }
+
+  // These functions various enable, disable, and reset the parser's state
+  // regarding the use of topic references in the smartPipelines plugin.
+
+  readTopicContextState(): TopicContextState {
+    return this.state.topicContextState;
+  }
+
+  // Enable topic references from outer contexts within smart pipeline bodies.
+
+  enterTopicPermittingContext(): void {
+    this.state.topicContextState = {
+      // Enable the use of the primary topic reference.
+      maxNumOfResolvableTopics: 1,
+      // Hide the use of any topic references from outer contexts.
+      maxTopicIndex: undefined,
+    };
+  }
+
+  // Disable topic references from outer contexts within syntax constructs
+  // such as the bodies of iteration statements.
+
+  enterTopicForbiddingContext(): void {
+    this.state.topicContextState = {
+      // Disable the use of the primary topic reference.
+      maxNumOfResolvableTopics: 0,
+      // Hide the use of any topic references from outer contexts.
+      maxTopicIndex: undefined,
+    };
+  }
+
+  // Register the use of a topic reference with the current topic context.
+  registerTopicReference(): void {
+    this.state.topicContextState.maxTopicIndex = 0;
+  }
+
+  primaryTopicReferenceIsAllowedInCurrentTopicContext(): boolean {
+    return this.state.topicContextState.maxNumOfResolvableTopics >= 1;
+  }
+
+  topicReferenceWasUsedInCurrentTopicContext(): boolean {
+    return this.state.topicContextState.maxTopicIndex >= 0;
+  }
+
+  // Reset the parser's state using values from the outer context.
+
+  exitTopicContext(outerTopicContextState: TopicContextState): void {
+    this.state.topicContextState = outerTopicContextState;
+  }
 }
+
+type PipelineStyle =
+  | "PipelineBareConstructorCall"
+  | "PipelineBareConstructorCall"
+  | "PipelineBareAwaitedFunctionCall"
+  | "PipelineTopicExpression";

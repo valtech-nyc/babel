@@ -422,7 +422,7 @@ export default class Tokenizer extends LocationParser {
       if (next >= charCodes.digit0 && next <= charCodes.digit9) {
         this.raise(this.state.pos, `Unexpected token`);
       } else {
-        this.finishOp(tt.primaryTopic, 1);
+        this.finishOp(tt.primaryTopicReference, 1);
       }
     } else {
       this.raise(this.state.pos, `Unexpected token`);

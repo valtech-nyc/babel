@@ -325,17 +325,15 @@ export default class StatementParser extends ExpressionParser {
     // For the smartPipelines plugin:
     // Disable topic references from outer contexts within the loop body.
     // They are permitted in test expressions, outside of the loop body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
+
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
 
     node.body = this.parseStatement(false);
 
     this.state.labels.pop();
     // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
+    this.exitTopicContext(outerContextTopicState);
 
     this.expect(tt._while);
     node.test = this.parseParenExpression();
@@ -548,17 +546,14 @@ export default class StatementParser extends ExpressionParser {
     // For the smartPipelines plugin:
     // Disable topic references from outer contexts within the loop body.
     // They are permitted in test expressions, outside of the loop body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
 
     node.body = this.parseStatement(false);
     this.state.labels.pop();
 
     // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
+    this.exitTopicContext(outerContextTopicState);
 
     return this.finishNode(node, "WhileStatement");
   }
@@ -728,17 +723,14 @@ export default class StatementParser extends ExpressionParser {
     // For the smartPipelines plugin:
     // Disable topic references from outer contexts within the loop body.
     // They are permitted in test expressions, outside of the loop body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
 
     node.body = this.parseStatement(false);
     this.state.labels.pop();
 
     // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
+    this.exitTopicContext(outerContextTopicState);
 
     return this.finishNode(node, "ForStatement");
   }
@@ -767,17 +759,14 @@ export default class StatementParser extends ExpressionParser {
     // For the smartPipelines plugin:
     // Disable topic references from outer contexts within the loop body.
     // They are permitted in test expressions, outside of the loop body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
 
     node.body = this.parseStatement(false);
     this.state.labels.pop();
 
     // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
+    this.exitTopicContext(outerContextTopicState);
 
     return this.finishNode(node, type);
   }
@@ -883,10 +872,8 @@ export default class StatementParser extends ExpressionParser {
     // Disable topic references from outer contexts within the function body.
     // They are permitted in function default-parameter expressions, which are
     // part of the outer context, outside of the function body.
-    const outerMaxNumOfResolvableTopics = this.state.maxNumOfResolvableTopics;
-    this.state.maxNumOfResolvableTopics = 0;
-    const outerMaxTopicIndex = this.state.maxTopicIndex;
-    this.state.outerMaxTopicIndex = undefined;
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
 
     this.parseFunctionBodyAndFinish(
       node,
@@ -899,8 +886,7 @@ export default class StatementParser extends ExpressionParser {
     this.state.inGenerator = oldInGenerator;
 
     // Restore previous topic-binding state.
-    this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
-    this.state.maxTopicIndex = outerMaxTopicIndex;
+    this.exitTopicContext(outerContextTopicState);
 
     return node;
   }
