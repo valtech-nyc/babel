@@ -1,0 +1,4 @@
+{
+  "plugins": ["smartPipelines"],
+  "throws": "Pipeline head cannot be a sequence expression (1:0)"
+}

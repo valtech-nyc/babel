@@ -302,12 +302,20 @@ export default class ExpressionParser extends LValParser {
         if (node.operator === "|>") {
           this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
           if (this.hasPlugin("smartPipelines")) {
-            // If smartPipelines plugin is active, then enable the use of
-            // the primary topic reference.
+            // If the smartPipelines plugin is active, then:
+            // Ensure that the pipeline head is not a sequence expression.
+            if (left.type === "SequenceExpression") {
+              throw this.raise(
+                leftStartPos,
+                `Pipeline head cannot be a sequence expression`,
+              );
+            }
+            // Enable the use of the primary topic reference.
             this.state.maxNumOfResolvableTopics = 1;
             // Hide the use of any topic references from outer contexts.
             this.state.maxTopicIndex = undefined;
           } else if (this.hasPlugin("pipelineOperator")) {
+            // If the alternative pipelineOperator plugin is active, then:
             // pipelineOperator supports syntax such as 10 |> x => x + 1.
             // In contrast, smartPipelines would require parentheses
             // around the arrow function.
