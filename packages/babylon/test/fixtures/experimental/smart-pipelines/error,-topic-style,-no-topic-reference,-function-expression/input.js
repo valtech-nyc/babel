@@ -1,1 +1,1 @@
-value |> function (x) { return x; }
+value |> function (x) { return; }
