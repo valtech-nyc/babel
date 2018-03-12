@@ -332,6 +332,15 @@ export default class ExpressionParser extends LValParser {
             startLoc,
           );
 
+          // Check for a following arrow `=>`, for a human-friendly error
+          // instead of something like 'Unexpected token, expected ";"'.
+          if (this.match(tt.arrow)) {
+            throw this.raise(
+              this.state.start,
+              `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`,
+            );
+          }
+
           // Restore previous topic-binding state.
           this.state.maxNumOfResolvableTopics = outerMaxNumOfResolvableTopics;
           this.state.maxTopicIndex = outerMaxTopicIndex;
