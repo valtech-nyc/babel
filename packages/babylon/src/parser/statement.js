@@ -576,7 +576,20 @@ export default class StatementParser extends ExpressionParser {
     }
     this.next();
     node.object = this.parseParenExpression();
+
+    // For the smartPipelines plugin:
+    // Disable topic references from outer contexts within the function body.
+    // They are permitted in function default-parameter expressions, which are
+    // part of the outer context, outside of the function body.
+    const outerContextTopicState = this.readTopicContextState();
+    this.enterTopicForbiddingContext();
+
+    // Parse the statement body.
     node.body = this.parseStatement(false);
+
+    // Restore previous topic-binding state.
+    this.exitTopicContext(outerContextTopicState);
+
     return this.finishNode(node, "WithStatement");
   }
 
