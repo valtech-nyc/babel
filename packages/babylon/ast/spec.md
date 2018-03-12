@@ -843,6 +843,54 @@ enum LogicalOperator {
 
 A logical operator token.
 
+### PipelineBody
+
+```js
+interface PipelineBody <: Node { }
+```
+
+A pipeline body for the `smartPipelines` proposal, whose pipeline expressions are `BinaryExpression`s with `PipelineBody`-valued `right` properties.
+
+#### PipelineBareFunction
+
+```js
+interface PipelineBareFunction <: PipelineBody {
+  callee: Expression;
+}
+```
+
+A node that represents the body of a bare-function-call pipeline from the `smartPipelines` plugin.
+
+#### PipelineBareConstructor
+
+```js
+interface PipelineBareConstructor <: PipelineBody {
+  callee: Expression;
+}
+```
+
+A node that represents the body of a bare-constructor-call pipeline from the `smartPipelines` plugin.
+
+#### PipelineBareAwaitedFunction
+
+```js
+interface PipelineBareAwaitedFunction <: PipelineBody {
+  callee: Expression;
+}
+```
+
+A node that represents the body of a bare-awaited-function-call pipeline from the `smartPipelines` plugin.
+
+#### PipelineTopicExpression
+
+```js
+interface PipelineTopicExpression <: PipelineBody {
+  expression: Expression;
+}
+```
+
+A node that represents the body of a topic-expression pipeline from the `smartPipelines` plugin.
+
 ### SpreadElement
 
 ```js
