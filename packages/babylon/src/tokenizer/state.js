@@ -16,6 +16,7 @@ export default class State {
     this.input = input;
 
     this.potentialArrowAt = -1;
+    this.potentialSoloAwaitAt = -1;
 
     this.noArrowAt = [];
     this.noArrowParamsConversionAt = [];
@@ -24,7 +25,10 @@ export default class State {
     this.inMethod = this.inFunction = this.inParameters = this.maybeInArrowParameters = this.inGenerator = this.inAsync = this.inPropertyName = this.inType = this.inClassProperty = this.noAnonFunctionType = false;
 
     // Used by smartPipelines.
-    this.topicContextState = new TopicContextState();
+    this.topicContextState = {
+      maxNumOfResolvableTopics: 0,
+      maxTopicIndex: undefined,
+    };
 
     this.classLevel = 0;
 
@@ -75,6 +79,9 @@ export default class State {
 
   // Used to signify the start of a potential arrow function
   potentialArrowAt: number;
+
+  // Used to signify the start of a potential solo await in a pipeline
+  potentialSoloAwaitAt: number;
 
   // Used to signify the start of an expression which looks like a
   // typed arrow function, but it isn't

@@ -1856,7 +1856,12 @@ export default class ExpressionParser extends LValParser {
         "await* has been removed from the async functions proposal. Use Promise.all() instead.",
       );
     }
-    node.argument = this.parseMaybeUnary();
+    if (
+      this.state.potentialSoloAwaitAt !== this.state.lastTokStart ||
+      (!this.match(tt.pipeline) && !this.isLineTerminator())
+    ) {
+      node.argument = this.parseMaybeUnary();
+    }
     return this.finishNode(node, "AwaitExpression");
   }
 
@@ -1903,11 +1908,20 @@ export default class ExpressionParser extends LValParser {
       // of topic references in the outer context.
       this.enterTopicPermittingContext();
     } else if (this.hasPlugin("pipelineOperator")) {
-      // If the alternative pipelineOperator plugin is active, then:
-      // pipelineOperator supports syntax such as 10 |> x => x + 1.
-      // In contrast, smartPipelines would require parentheses
-      // around the arrow function.
-      this.state.potentialArrowAt = this.state.start;
+      // If `pipelineOperator` but `smartPipelines` plugin is active, then:
+      // pipelineOperator supports syntax such as `10 |> x => x + 1 |> f`
+      // grouping as `10 |> (x => x + 1) |> f`.
+      //
+      // In contrast, `smartPipelines` would require parentheses
+      // around the arrow function or else it would be invalid.
+      //
+      // Note that this means that, with pipelineOperator,
+      // `x => x |> f |> g` would be invalid, since it would group as
+      // `(x => x) |> f |> g`; this too is different from `smartPipelines`,
+      // in which `x => x |> f |> g` would be valid.
+      const startPos = this.state.start;
+      this.state.potentialArrowAt = startPos;
+      this.state.potentialSoloAwaitAt = startPos;
     }
   }
 
