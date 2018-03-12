@@ -326,11 +326,11 @@ export default class ExpressionParser extends LValParser {
         );
 
         if (node.operator === "|>" && this.hasPlugin("smartPipelines")) {
-          node.right = this.parseSmartPipelineBody(
+          const pipelineBodyNode = (node.right = this.parseSmartPipelineBody(
             node.right,
             startPos,
             startLoc,
-          );
+          ));
 
           // Check for a following arrow `=>`, for a human-friendly error
           // instead of something like 'Unexpected token, expected ";"'.
@@ -338,6 +338,14 @@ export default class ExpressionParser extends LValParser {
             throw this.raise(
               this.state.start,
               `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`,
+            );
+          } else if (
+            pipelineBodyNode.type === "PipelineTopicExpression" &&
+            pipelineBodyNode.expression.type === "SequenceExpression"
+          ) {
+            throw this.raise(
+              startPos,
+              `Pipeline body cannot be a sequence expression`,
             );
           }
 

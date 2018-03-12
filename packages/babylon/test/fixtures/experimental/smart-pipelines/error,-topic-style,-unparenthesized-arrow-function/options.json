@@ -1,4 +1,0 @@
-{
-  "plugins": ["smartPipelines"],
-  "throws": "Unexpected token, expected \";\" (1:8)"
-}
