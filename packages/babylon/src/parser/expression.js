@@ -1934,7 +1934,7 @@ export default class ExpressionParser extends LValParser {
       // sequence expression.
       throw this.raise(
         leftStartPos,
-        `Pipeline head cannot be a sequence expression`,
+        `Pipeline head may not be a comma-separated sequence expression`,
       );
     }
   }
@@ -1978,7 +1978,7 @@ export default class ExpressionParser extends LValParser {
     ) {
       throw this.raise(
         startPos,
-        `Pipeline body cannot be a sequence expression`,
+        `Pipeline body may not be a comma-separated sequence expression`,
       );
     }
   }

@@ -1,4 +1,4 @@
 {
   "plugins": ["smartPipelines"],
-  "throws": "Pipeline body cannot be a sequence expression (1:6)"
+  "throws": "Pipeline body may not be a comma-separated sequence expression (1:6)"
 }
