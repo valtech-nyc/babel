@@ -425,7 +425,7 @@ export default class Tokenizer extends LocationParser {
         this.finishOp(tt.primaryTopicReference, 1);
       }
     } else {
-      this.raise(this.state.pos, `Unexpected token`);
+      this.raise(this.state.pos, `Unexpected character '#'`);
     }
   }
 
