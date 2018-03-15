@@ -294,8 +294,6 @@ export default class ExpressionParser extends LValParser {
 
         this.next();
 
-        const outerTopicState = this.readTopicContextState();
-
         if (op === tt.pipeline) {
           this.parsePipelineInfixOperator(left, leftStartPos);
         } else if (op === tt.nullishCoalescing) {
@@ -303,8 +301,6 @@ export default class ExpressionParser extends LValParser {
         }
 
         node.right = this.parseExprOpRightExpr(op, prec, noIn);
-
-        this.exitTopicContext(outerTopicState);
 
         this.finishNode(
           node,
@@ -340,11 +336,13 @@ export default class ExpressionParser extends LValParser {
         if (this.hasPlugin("smartPipelines")) {
           const startPos = this.state.start;
           const startLoc = this.state.startLoc;
-          return this.parseSmartPipelineBody(
-            this.parseExprOpBaseRightExpr(op, prec, noIn),
-            startPos,
-            startLoc,
-          );
+          return this.withTopicPermittingContext(() => {
+            return this.parseSmartPipelineBody(
+              this.parseExprOpBaseRightExpr(op, prec, noIn),
+              startPos,
+              startLoc,
+            );
+          });
         } else {
           return this.parseExprOpBaseRightExpr(op, prec, noIn);
         }
@@ -1936,9 +1934,6 @@ export default class ExpressionParser extends LValParser {
     this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
     if (this.hasPlugin("smartPipelines")) {
       this.checkSmartPipelineHeadEarlyErrors(left, leftStartPos);
-      // Enable the use of the primary topic reference and hide any usage
-      // of topic references in the outer context.
-      this.enterTopicPermittingContext();
     } else if (this.hasPlugin("pipelineOperator")) {
       // If `pipelineOperator` but `smartPipelines` plugin is active, then:
       // pipelineOperator supports syntax such as `10 |> x => x + 1 |> f`
