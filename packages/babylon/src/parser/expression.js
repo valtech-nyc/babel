@@ -304,13 +304,7 @@ export default class ExpressionParser extends LValParser {
           this.expectPlugin("nullishCoalescingOperator");
         }
 
-        node.right = this.parseExprOp(
-          this.parseMaybeUnary(),
-          startPos,
-          startLoc,
-          op.rightAssociative ? prec - 1 : prec,
-          noIn,
-        );
+        node.right = this.parseExprOpRightExpr(op, prec, noIn);
 
         if (node.operator === "|>" && this.hasPlugin("smartPipelines")) {
           node.right = this.parseSmartPipelineBody(
@@ -340,6 +334,26 @@ export default class ExpressionParser extends LValParser {
       }
     }
     return left;
+  }
+
+  // Helper function for `parseExprOp`. Parse the right-hand side of binary-
+  // operator expressions.
+
+  parseExprOpRightExpr(
+    op: TokenType,
+    prec: number,
+    noIn: ?boolean,
+  ): N.Expression {
+    const startPos = this.state.start;
+    const startLoc = this.state.startLoc;
+
+    return this.parseExprOp(
+      this.parseMaybeUnary(),
+      startPos,
+      startLoc,
+      op.rightAssociative ? prec - 1 : prec,
+      noIn,
+    );
   }
 
   // Parse unary operators, both prefix and postfix.
