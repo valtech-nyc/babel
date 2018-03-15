@@ -2079,6 +2079,49 @@ export default class ExpressionParser extends LValParser {
     };
   }
 
+  // Enable topic references from outer contexts within smart pipeline bodies.
+  // The function modifies the parser's topic-context state to enable or disable
+  // the use of topic references with the smartPipelines plugin. They then run a
+  // callback, then they reset the parser to the old topic-context state that it
+  // had before the function was called.
+
+  withTopicPermittingContext<T>(callback: () => T): T {
+    const outerContextTopicState = this.readTopicContextState();
+    this.state.topicContextState = {
+      // Enable the use of the primary topic reference.
+      maxNumOfResolvableTopics: 1,
+      // Hide the use of any topic references from outer contexts.
+      maxTopicIndex: undefined,
+    };
+
+    const callbackResult = callback();
+
+    this.state.topicContextState = outerContextTopicState;
+    return callbackResult;
+  }
+
+  // Disable topic references from outer contexts within syntax constructs
+  // such as the bodies of iteration statements.
+  // The function modifies the parser's topic-context state to enable or disable
+  // the use of topic references with the smartPipelines plugin. They then run a
+  // callback, then they reset the parser to the old topic-context state that it
+  // had before the function was called.
+
+  withTopicForbiddingContext(callback: () => void): void {
+    const outerContextTopicState = this.readTopicContextState();
+    this.state.topicContextState = {
+      // Disable the use of the primary topic reference.
+      maxNumOfResolvableTopics: 0,
+      // Hide the use of any topic references from outer contexts.
+      maxTopicIndex: undefined,
+    };
+
+    const callbackResult = callback();
+
+    this.state.topicContextState = outerContextTopicState;
+    return callbackResult;
+  }
+
   // Register the use of a topic reference with the current topic context.
   registerTopicReference(): void {
     this.state.topicContextState.maxTopicIndex = 0;
