@@ -223,7 +223,7 @@ export type TopicContextState = {
 
   // When a topic binding has been currently established, and if that binding
   // has been used as a topic reference `#`, then this is 0. Otherwise, it is
-  // `undefined`. This is forwards compatible with a future plugin for
-  // multiple lexical topics.
-  maxTopicIndex: undefined | 0,
+  // `null`. This is forwards compatible with a future plugin for multiple
+  // lexical topics.
+  maxTopicIndex: null | 0,
 };

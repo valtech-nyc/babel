@@ -2118,7 +2118,7 @@ export default class ExpressionParser extends LValParser {
       // Enable the use of the primary topic reference.
       maxNumOfResolvableTopics: 1,
       // Hide the use of any topic references from outer contexts.
-      maxTopicIndex: undefined,
+      maxTopicIndex: null,
     };
 
     const callbackResult = callback();
@@ -2140,7 +2140,7 @@ export default class ExpressionParser extends LValParser {
       // Disable the use of the primary topic reference.
       maxNumOfResolvableTopics: 0,
       // Hide the use of any topic references from outer contexts.
-      maxTopicIndex: undefined,
+      maxTopicIndex: null,
     };
 
     const callbackResult = callback();
@@ -2159,13 +2159,16 @@ export default class ExpressionParser extends LValParser {
   }
 
   topicReferenceWasUsedInCurrentTopicContext(): boolean {
-    return this.state.topicContextState.maxTopicIndex >= 0;
   }
 
   // Reset the parser's state using values from the outer context.
 
   exitTopicContext(outerTopicContextState: TopicContextState): void {
     this.state.topicContextState = outerTopicContextState;
+    return (
+      this.state.topicContextState.maxTopicIndex != null &&
+      this.state.topicContextState.maxTopicIndex >= 0
+    );
   }
 }
 
