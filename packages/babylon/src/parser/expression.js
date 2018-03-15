@@ -21,7 +21,6 @@
 // [opp]: http://en.wikipedia.org/wiki/Operator-precedence_parser
 
 import { types as tt, type TokenType } from "../tokenizer/types";
-import { TopicContextState } from "../tokenizer/state";
 import * as N from "../types";
 import LValParser from "./lval";
 import { reservedWords } from "../util/identifier";
@@ -2076,36 +2075,6 @@ export default class ExpressionParser extends LValParser {
     }
   }
 
-  // These functions various enable, disable, and reset the parser's state
-  // regarding the use of topic references in the smartPipelines plugin.
-
-  readTopicContextState(): TopicContextState {
-    return this.state.topicContextState;
-  }
-
-  // Enable topic references from outer contexts within smart pipeline bodies.
-
-  enterTopicPermittingContext(): void {
-    this.state.topicContextState = {
-      // Enable the use of the primary topic reference.
-      maxNumOfResolvableTopics: 1,
-      // Hide the use of any topic references from outer contexts.
-      maxTopicIndex: undefined,
-    };
-  }
-
-  // Disable topic references from outer contexts within syntax constructs
-  // such as the bodies of iteration statements.
-
-  enterTopicForbiddingContext(): void {
-    this.state.topicContextState = {
-      // Disable the use of the primary topic reference.
-      maxNumOfResolvableTopics: 0,
-      // Hide the use of any topic references from outer contexts.
-      maxTopicIndex: undefined,
-    };
-  }
-
   // Enable topic references from outer contexts within smart pipeline bodies.
   // The function modifies the parser's topic-context state to enable or disable
   // the use of topic references with the smartPipelines plugin. They then run a
@@ -2149,7 +2118,12 @@ export default class ExpressionParser extends LValParser {
     return callbackResult;
   }
 
-  // Register the use of a topic reference with the current topic context.
+  readTopicContextState(): TopicContextState {
+    return this.state.topicContextState;
+  }
+
+  // Register the use of a primary topic reference (`#`) within the current
+  // topic context.
   registerTopicReference(): void {
     this.state.topicContextState.maxTopicIndex = 0;
   }
@@ -2159,12 +2133,6 @@ export default class ExpressionParser extends LValParser {
   }
 
   topicReferenceWasUsedInCurrentTopicContext(): boolean {
-  }
-
-  // Reset the parser's state using values from the outer context.
-
-  exitTopicContext(outerTopicContextState: TopicContextState): void {
-    this.state.topicContextState = outerTopicContextState;
     return (
       this.state.topicContextState.maxTopicIndex != null &&
       this.state.topicContextState.maxTopicIndex >= 0
