@@ -298,9 +298,9 @@ export default class ExpressionParser extends LValParser {
 
         const outerTopicState = this.readTopicContextState();
 
-        if (node.operator === "|>") {
+        if (op === tt.pipeline) {
           this.parsePipelineInfixOperator(left, leftStartPos);
-        } else if (node.operator === "??") {
+        } else if (op === tt.nullishCoalescing) {
           this.expectPlugin("nullishCoalescingOperator");
         }
 
