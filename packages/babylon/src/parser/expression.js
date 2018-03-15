@@ -291,10 +291,8 @@ export default class ExpressionParser extends LValParser {
         }
 
         const op = this.state.type;
-        this.next();
 
-        const startPos = this.state.start;
-        const startLoc = this.state.startLoc;
+        this.next();
 
         const outerTopicState = this.readTopicContextState();
 
@@ -306,14 +304,6 @@ export default class ExpressionParser extends LValParser {
 
         node.right = this.parseExprOpRightExpr(op, prec, noIn);
 
-        if (node.operator === "|>" && this.hasPlugin("smartPipelines")) {
-          node.right = this.parseSmartPipelineBody(
-            node.right,
-            startPos,
-            startLoc,
-          );
-        }
-
         this.exitTopicContext(outerTopicState);
 
         this.finishNode(
@@ -324,6 +314,7 @@ export default class ExpressionParser extends LValParser {
             ? "LogicalExpression"
             : "BinaryExpression",
         );
+
         return this.parseExprOp(
           node,
           leftStartPos,
@@ -337,9 +328,36 @@ export default class ExpressionParser extends LValParser {
   }
 
   // Helper function for `parseExprOp`. Parse the right-hand side of binary-
-  // operator expressions.
+  // operator expressions, then apply any operator-specific functions.
 
   parseExprOpRightExpr(
+    op: TokenType,
+    prec: number,
+    noIn: ?boolean,
+  ): N.Expression {
+    switch (op) {
+      case tt.pipeline:
+        if (this.hasPlugin("smartPipelines")) {
+          const startPos = this.state.start;
+          const startLoc = this.state.startLoc;
+          return this.parseSmartPipelineBody(
+            this.parseExprOpBaseRightExpr(op, prec, noIn),
+            startPos,
+            startLoc,
+          );
+        } else {
+          return this.parseExprOpBaseRightExpr(op, prec, noIn);
+        }
+
+      default:
+        return this.parseExprOpBaseRightExpr(op, prec, noIn);
+    }
+  }
+
+  // Helper function for `parseExprOpRightExpr`. Parse the right-hand side of
+  // binary-operator expressions without applying any operator-specific functions.
+
+  parseExprOpBaseRightExpr(
     op: TokenType,
     prec: number,
     noIn: ?boolean,
