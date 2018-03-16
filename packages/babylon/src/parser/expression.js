@@ -2018,7 +2018,7 @@ export default class ExpressionParser extends LValParser {
     const bodyNode = this.startNodeAt(startPos, startLoc);
     switch (pipelineStyle) {
       case "PipelineBareFunction":
-        bodyNode.callee = childExpression.callee;
+        bodyNode.callee = childExpression;
         break;
       case "PipelineBareConstructor":
         bodyNode.callee = childExpression.callee;

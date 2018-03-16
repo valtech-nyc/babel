@@ -315,6 +315,23 @@
                             "line": 5,
                             "column": 15
                           }
+                        },
+                        "callee": {
+                          "type": "Identifier",
+                          "start": 82,
+                          "end": 92,
+                          "loc": {
+                            "start": {
+                              "line": 5,
+                              "column": 5
+                            },
+                            "end": {
+                              "line": 5,
+                              "column": 15
+                            },
+                            "identifierName": "capitalize"
+                          },
+                          "name": "capitalize"
                         }
                       }
                     },

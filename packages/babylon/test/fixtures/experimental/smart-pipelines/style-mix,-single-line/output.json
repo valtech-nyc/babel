@@ -164,6 +164,23 @@
                           "line": 2,
                           "column": 10
                         }
+                      },
+                      "callee": {
+                        "type": "Identifier",
+                        "start": 30,
+                        "end": 33,
+                        "loc": {
+                          "start": {
+                            "line": 2,
+                            "column": 7
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 10
+                          },
+                          "identifierName": "inc"
+                        },
+                        "name": "inc"
                       }
                     }
                   },

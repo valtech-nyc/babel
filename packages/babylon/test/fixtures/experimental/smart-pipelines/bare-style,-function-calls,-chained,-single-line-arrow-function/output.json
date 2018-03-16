@@ -137,6 +137,56 @@
                     "line": 1,
                     "column": 20
                   }
+                },
+                "callee": {
+                  "type": "MemberExpression",
+                  "start": 10,
+                  "end": 20,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 10
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 20
+                    }
+                  },
+                  "object": {
+                    "type": "Identifier",
+                    "start": 10,
+                    "end": 16,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 10
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 16
+                      },
+                      "identifierName": "number"
+                    },
+                    "name": "number"
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "start": 17,
+                    "end": 20,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 17
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 20
+                      },
+                      "identifierName": "inc"
+                    },
+                    "name": "inc"
+                  },
+                  "computed": false
                 }
               }
             },
@@ -154,6 +204,23 @@
                   "line": 1,
                   "column": 30
                 }
+              },
+              "callee": {
+                "type": "Identifier",
+                "start": 24,
+                "end": 30,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 24
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 30
+                  },
+                  "identifierName": "double"
+                },
+                "name": "double"
               }
             }
           }
