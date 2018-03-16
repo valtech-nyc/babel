@@ -294,7 +294,7 @@ export default class ExpressionParser extends LValParser {
         this.next();
 
         if (op === tt.pipeline) {
-          this.parsePipelineInfixOperator(left, leftStartPos);
+          this.checkPipelineAtInfixOperator(left, leftStartPos);
         } else if (op === tt.nullishCoalescing) {
           this.expectPlugin("nullishCoalescingOperator");
         }
@@ -1926,10 +1926,10 @@ export default class ExpressionParser extends LValParser {
     return this.finishNode(node, "YieldExpression");
   }
 
-  // Parses a pipeline (for any of the pipeline Babylon plugins) at the point
+  // Validates a pipeline (for any of the pipeline Babylon plugins) at the point
   // of the infix operator `|>`.
 
-  parsePipelineInfixOperator(left: N.Expression, leftStartPos: number) {
+  checkPipelineAtInfixOperator(left: N.Expression, leftStartPos: number) {
     this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
     if (this.hasPlugin("smartPipelines")) {
       this.checkSmartPipelineHeadEarlyErrors(left, leftStartPos);
