@@ -901,7 +901,7 @@ export default class ExpressionParser extends LValParser {
       }
 
       case tt.primaryTopicReference: {
-        this.expectPlugin(["smartPipelines"]);
+        this.expectPlugin("smartPipelines");
         node = this.startNode();
 
         this.next();
@@ -1929,7 +1929,7 @@ export default class ExpressionParser extends LValParser {
   // Parses a pipeline (for any of the pipeline Babylon plugins) at the point
   // of the infix operator `|>`.
 
-  parsePipelineInfixOperator(left: N.Expression, leftStartPos: Position) {
+  parsePipelineInfixOperator(left: N.Expression, leftStartPos: number) {
     this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
     if (this.hasPlugin("smartPipelines")) {
       this.checkSmartPipelineHeadEarlyErrors(left, leftStartPos);
@@ -1951,10 +1951,7 @@ export default class ExpressionParser extends LValParser {
     }
   }
 
-  checkSmartPipelineHeadEarlyErrors(
-    left: N.Expression,
-    leftStartPos: Position,
-  ) {
+  checkSmartPipelineHeadEarlyErrors(left: N.Expression, leftStartPos: number) {
     if (left.type === "SequenceExpression") {
       // Ensure that the pipeline head is not a comma-delimited
       // sequence expression.
@@ -1968,8 +1965,8 @@ export default class ExpressionParser extends LValParser {
   parseSmartPipelineBody(
     childExpression: N.Expression,
     startPos: number,
-    startLoc: Location,
-  ): N.PipelineExpression {
+    startLoc: Position,
+  ): N.PipelineBody {
     const pipelineStyle = this.checkSmartPipelineBodyStyle(childExpression);
 
     this.checkSmartPipelineBodyEarlyErrors(
@@ -1990,7 +1987,7 @@ export default class ExpressionParser extends LValParser {
     childExpression: N.Expression,
     pipelineStyle: PipelineStyle,
     startPos: number,
-  ): N.PipelineExpression {
+  ): N.PipelineBody {
     if (this.match(tt.arrow)) {
       // If the following token is invalidly `=>`, then throw a human-friendly error
       // instead of something like 'Unexpected token, expected ";"'.
@@ -2013,8 +2010,8 @@ export default class ExpressionParser extends LValParser {
     childExpression: N.Expression,
     pipelineStyle: PipelineStyle,
     startPos: number,
-    startLoc: Location,
-  ): N.PipelineExpression {
+    startLoc: Position,
+  ): N.PipelineBody {
     const bodyNode = this.startNodeAt(startPos, startLoc);
     switch (pipelineStyle) {
       case "PipelineBareFunction":
@@ -2103,7 +2100,7 @@ export default class ExpressionParser extends LValParser {
   // callback, then they reset the parser to the old topic-context state that it
   // had before the function was called.
 
-  withTopicForbiddingContext(callback: () => void): void {
+  withTopicForbiddingContext<T>(callback: () => T): T {
     const outerContextTopicState = this.readTopicContextState();
     this.state.topicContextState = {
       // Disable the use of the primary topic reference.
@@ -2118,7 +2115,7 @@ export default class ExpressionParser extends LValParser {
     return callbackResult;
   }
 
-  readTopicContextState(): TopicContextState {
+  readTopicContextState(): tt.TopicContextState {
     return this.state.topicContextState;
   }
 
