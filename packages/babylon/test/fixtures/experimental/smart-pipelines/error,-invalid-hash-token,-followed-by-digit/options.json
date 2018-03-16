@@ -1,0 +1,4 @@
+{
+  "plugins": ["smartPipelines"],
+  "throws": "Unexpected digit after topic reference: '#4' (1:5)"
+}

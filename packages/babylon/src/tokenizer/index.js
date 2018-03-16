@@ -405,7 +405,8 @@ export default class Tokenizer extends LocationParser {
   // All in the name of speed.
   //
   readToken_numberSign(): void {
-    const next = this.input.charCodeAt(this.state.pos + 1);
+    const nextPos = this.state.pos + 1;
+    const next = this.input.charCodeAt(nextPos);
     if (isIdentifierStart(next)) {
       if (
         (this.hasPlugin("classPrivateProperties") ||
@@ -420,7 +421,12 @@ export default class Tokenizer extends LocationParser {
       }
     } else if (this.hasPlugin("smartPipelines")) {
       if (next >= charCodes.digit0 && next <= charCodes.digit9) {
-        this.raise(this.state.pos, `Unexpected token`);
+        this.raise(
+          this.state.pos,
+          `Unexpected digit after topic reference: '#${String.fromCodePoint(
+            next,
+          )}'`,
+        );
       } else {
         this.finishOp(tt.primaryTopicReference, 1);
       }
