@@ -141,7 +141,8 @@ require("babylon").parse("code", {
 | `bigInt` ([proposal](https://github.com/tc39/proposal-bigint)) | `100n` |
 | `optionalCatchBinding` ([proposal](https://github.com/babel/proposals/issues/7)) | `try {throw 0;} catch{do();}` |
 | `throwExpressions` ([proposal](https://github.com/babel/proposals/issues/23)) | `() => throw new Error("")` |
-| `pipelineOperator` ([proposal](https://github.com/babel/proposals/issues/29)) | `a \|> b` |
+| `pipelineOperator` ([proposal](https://github.com/babel/proposals/issues/29)) | `v \|> f`, `v \|> x => x + 1` |
+| `smartPipelines` ([proposal](https://github.com/js-choi/proposal-smart-pipelines)) | `v \|> f`, `v \|> # + 1` |
 | `nullishCoalescingOperator` ([proposal](https://github.com/babel/proposals/issues/14)) | `a ?? b` |
 
 ### FAQ

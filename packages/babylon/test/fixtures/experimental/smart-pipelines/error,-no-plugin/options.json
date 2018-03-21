@@ -1,0 +1,3 @@
+{
+  "throws": "This experimental syntax requires enabling one of the following parser plugin(s): 'pipelineOperator, smartPipelines' (1:9)"
+}

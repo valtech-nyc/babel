@@ -404,6 +404,37 @@ export default class Tokenizer extends LocationParser {
   //
   // All in the name of speed.
   //
+  readToken_numberSign(): void {
+    const nextPos = this.state.pos + 1;
+    const next = this.input.charCodeAt(nextPos);
+    if (isIdentifierStart(next)) {
+      if (
+        (this.hasPlugin("classPrivateProperties") ||
+          this.hasPlugin("classPrivateMethods")) &&
+        this.state.classLevel > 0
+      ) {
+        ++this.state.pos;
+        this.finishToken(tt.hash);
+        return;
+      } else {
+        this.raise(this.state.pos, `Unexpected token`);
+      }
+    } else if (this.hasPlugin("smartPipelines")) {
+      if (next >= charCodes.digit0 && next <= charCodes.digit9) {
+        this.raise(
+          this.state.pos,
+          `Unexpected digit after topic reference: '#${String.fromCodePoint(
+            next,
+          )}'`,
+        );
+      } else {
+        this.finishOp(tt.primaryTopicReference, 1);
+      }
+    } else {
+      this.raise(this.state.pos, `Unexpected character '#'`);
+    }
+  }
+
   readToken_dot(): void {
     const next = this.input.charCodeAt(this.state.pos + 1);
     if (next >= charCodes.digit0 && next <= charCodes.digit9) {
@@ -616,21 +647,12 @@ export default class Tokenizer extends LocationParser {
 
   getTokenFromCode(code: number): void {
     switch (code) {
+      // The interpretation of a number sign "#" depends on whether it is
+      // followed by an identifier or not.
+
       case charCodes.numberSign:
-        if (
-          (this.hasPlugin("classPrivateProperties") ||
-            this.hasPlugin("classPrivateMethods")) &&
-          this.state.classLevel > 0
-        ) {
-          ++this.state.pos;
-          this.finishToken(tt.hash);
-          return;
-        } else {
-          this.raise(
-            this.state.pos,
-            `Unexpected character '${codePointToString(code)}'`,
-          );
-        }
+        this.readToken_numberSign();
+        return;
 
       // The interpretation of a dot depends on whether it is followed
       // by a digit or another two dots.

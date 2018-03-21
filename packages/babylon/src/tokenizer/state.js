@@ -24,6 +24,12 @@ export default class State {
     // eslint-disable-next-line max-len
     this.inMethod = this.inFunction = this.inParameters = this.maybeInArrowParameters = this.inGenerator = this.inAsync = this.inPropertyName = this.inType = this.inClassProperty = this.noAnonFunctionType = false;
 
+    // Used by smartPipelines.
+    this.topicContextState = {
+      maxNumOfResolvableTopics: 0,
+      maxTopicIndex: undefined,
+    };
+
     this.classLevel = 0;
 
     this.labels = [];
@@ -102,6 +108,9 @@ export default class State {
   noAnonFunctionType: boolean;
   inPropertyName: boolean;
   inClassProperty: boolean;
+
+  // For the smartPipelines plugin:
+  topicContextState: tt.TopicContextState;
 
   // Check whether we are in a (nested) class or not.
   classLevel: number;
