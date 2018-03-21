@@ -46,8 +46,8 @@ export function addSourceMappingUrl(code, loc) {
   return code + "\n//# sourceMappingURL=" + path.basename(loc);
 }
 
-export function log(msg) {
-  if (!commander.quiet) console.log(msg);
+export function log(msg, force) {
+  if (force === true || commander.verbose) console.log(msg);
 }
 
 export function transform(filename, code, opts, callback) {
@@ -63,7 +63,7 @@ export function compile(filename, opts, callback) {
     if (err) {
       if (commander.watch) {
         console.error(err);
-        return callback(null, { ignored: true });
+        return callback(null, null);
       } else {
         return callback(err);
       }

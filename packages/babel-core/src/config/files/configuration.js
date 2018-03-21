@@ -6,6 +6,7 @@ import fs from "fs";
 import json5 from "json5";
 import resolve from "resolve";
 import { makeStrongCache, type CacheConfigurator } from "../caching";
+import makeAPI from "../helpers/config-api";
 
 const debug = buildDebug("babel:config:loading:files:configuration");
 
@@ -21,41 +22,58 @@ export type IgnoreFile = {
   ignore: Array<string>,
 };
 
+export type RelativeConfig = {
+  config: ConfigFile | null,
+  ignore: IgnoreFile | null,
+};
+
 const BABELRC_FILENAME = ".babelrc";
 const BABELRC_JS_FILENAME = ".babelrc.js";
 const PACKAGE_FILENAME = "package.json";
 const BABELIGNORE_FILENAME = ".babelignore";
 
-export function findBabelrc(
+export function findRelativeConfig(
   filepath: string,
   envName: string,
-): ConfigFile | null {
+): RelativeConfig {
+  let config = null;
+  let ignore = null;
+
   const dirname = path.dirname(filepath);
   let loc = dirname;
   while (true) {
-    const conf = [
-      BABELRC_FILENAME,
-      BABELRC_JS_FILENAME,
-      PACKAGE_FILENAME,
-    ].reduce((previousConfig: ConfigFile | null, name) => {
-      const filepath = path.join(loc, name);
-      const config = readConfig(filepath, envName);
+    if (!config) {
+      config = [BABELRC_FILENAME, BABELRC_JS_FILENAME, PACKAGE_FILENAME].reduce(
+        (previousConfig: ConfigFile | null, name) => {
+          const filepath = path.join(loc, name);
+          const config = readConfig(filepath, envName);
 
-      if (config && previousConfig) {
-        throw new Error(
-          `Multiple configuration files found. Please remove one:\n` +
-            ` - ${path.basename(previousConfig.filepath)}\n` +
-            ` - ${name}\n` +
-            `from ${loc}`,
-        );
+          if (config && previousConfig) {
+            throw new Error(
+              `Multiple configuration files found. Please remove one:\n` +
+                ` - ${path.basename(previousConfig.filepath)}\n` +
+                ` - ${name}\n` +
+                `from ${loc}`,
+            );
+          }
+
+          return config || previousConfig;
+        },
+        null,
+      );
+
+      if (config) {
+        debug("Found configuration %o from %o.", config.filepath, dirname);
       }
+    }
 
-      return config || previousConfig;
-    }, null);
+    if (!ignore) {
+      const ignoreLoc = path.join(loc, BABELIGNORE_FILENAME);
+      ignore = readIgnoreConfig(ignoreLoc);
 
-    if (conf) {
-      debug("Found configuration %o from %o.", conf.filepath, dirname);
-      return conf;
+      if (ignore) {
+        debug("Found ignore %o from %o.", ignore.filepath, dirname);
+      }
     }
 
     const nextLoc = path.dirname(loc);
@@ -63,27 +81,7 @@ export function findBabelrc(
     loc = nextLoc;
   }
 
-  return null;
-}
-
-export function findBabelignore(filepath: string): IgnoreFile | null {
-  const dirname = path.dirname(filepath);
-  let loc = dirname;
-  while (true) {
-    const ignoreLoc = path.join(loc, BABELIGNORE_FILENAME);
-    const ignore = readIgnoreConfig(ignoreLoc);
-
-    if (ignore) {
-      debug("Found ignore %o from %o.", ignore.filepath, dirname);
-      return ignore;
-    }
-
-    const nextLoc = path.dirname(loc);
-    if (loc === nextLoc) break;
-    loc = nextLoc;
-  }
-
-  return null;
+  return { config, ignore };
 }
 
 export function loadConfig(
@@ -106,7 +104,7 @@ export function loadConfig(
  * Read the given config file, returning the result. Returns null if no config was found, but will
  * throw if there are parsing errors while loading a config.
  */
-function readConfig(filepath, envName) {
+function readConfig(filepath, envName): ConfigFile | null {
   return path.extname(filepath) === ".js"
     ? readConfigJS(filepath, { envName })
     : readConfigFile(filepath);
@@ -153,12 +151,7 @@ const readConfigJS = makeStrongCache(
     }
 
     if (typeof options === "function") {
-      options = options({
-        cache: cache.simple(),
-        // Expose ".env()" so people can easily get the same env that we expose using the "env" key.
-        env: () => cache.using(data => data.envName),
-        async: () => false,
-      });
+      options = options(makeAPI(cache));
 
       if (!cache.configured()) throwConfigError();
     }

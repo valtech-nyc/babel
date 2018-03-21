@@ -13,10 +13,10 @@ import {
 const debug = buildDebug("babel:config:config-chain");
 
 import {
-  findBabelrc,
-  findBabelignore,
+  findRelativeConfig,
   loadConfig,
   type ConfigFile,
+  type IgnoreFile,
 } from "./files";
 
 import { makeWeakCache, makeStrongCache } from "./caching";
@@ -104,14 +104,18 @@ const loadPresetOverridesEnvDescriptors = makeWeakCache(
     ),
 );
 
+export type RootConfigChain = ConfigChain & {
+  babelrc: ConfigFile | void,
+  ignore: IgnoreFile | void,
+};
+
 /**
  * Build a config chain for Babel's full root configuration.
  */
 export function buildRootChain(
-  cwd: string,
   opts: ValidatedOptions,
   context: ConfigContext,
-): ConfigChain | null {
+): RootConfigChain | null {
   const programmaticChain = loadProgrammaticChain(
     {
       options: opts,
@@ -121,26 +125,24 @@ export function buildRootChain(
   );
   if (!programmaticChain) return null;
 
+  let ignore, babelrc;
+
   const fileChain = emptyChain();
   // resolve all .babelrc files
   if (opts.babelrc !== false && context.filename !== null) {
     const filename = context.filename;
-    const babelignoreFile = findBabelignore(filename);
-    if (
-      babelignoreFile &&
-      shouldIgnore(
-        context,
-        babelignoreFile.ignore,
-        null,
-        babelignoreFile.dirname,
-      )
-    ) {
+
+    ({ ignore, config: babelrc } = findRelativeConfig(
+      filename,
+      context.envName,
+    ));
+
+    if (ignore && shouldIgnore(context, ignore.ignore, null, ignore.dirname)) {
       return null;
     }
 
-    const babelrcFile = findBabelrc(filename, context.envName);
-    if (babelrcFile) {
-      const result = loadFileChain(babelrcFile, context);
+    if (babelrc) {
+      const result = loadFileChain(babelrc, context);
       if (!result) return null;
 
       mergeChain(fileChain, result);
@@ -158,6 +160,8 @@ export function buildRootChain(
     plugins: dedupDescriptors(chain.plugins),
     presets: dedupDescriptors(chain.presets),
     options: chain.options.map(o => normalizeOptions(o)),
+    ignore: ignore || undefined,
+    babelrc: babelrc || undefined,
   };
 }
 

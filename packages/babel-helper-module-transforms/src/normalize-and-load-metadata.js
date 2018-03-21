@@ -1,6 +1,6 @@
 import { basename, extname } from "path";
 
-import * as t from "@babel/types";
+import splitExportDeclaration from "@babel/helper-split-export-declaration";
 
 export type ModuleMetadata = {
   exportName: string,
@@ -86,7 +86,12 @@ export function isSideEffectImport(source: SourceModuleMetadata) {
 export default function normalizeModuleAndLoadMetadata(
   programPath: NodePath,
   exportName?: string,
-  { noInterop = false, loose = false, lazy = false } = {},
+  {
+    noInterop = false,
+    loose = false,
+    lazy = false,
+    esNamespaceOnly = false,
+  } = {},
 ): ModuleMetadata {
   if (!exportName) {
     exportName = programPath.scope.generateUidIdentifier("exports").name;
@@ -107,6 +112,16 @@ export default function normalizeModuleAndLoadMetadata(
     }
 
     if (noInterop) metadata.interop = "none";
+    else if (esNamespaceOnly) {
+      // Both the default and namespace interops pass through __esModule
+      // objects, but the namespace interop is used to enable Babel's
+      // destructuring-like interop behavior for normal CommonJS.
+      // Since some tooling has started to remove that behavior, we expose
+      // it as the `esNamespace` option.
+      if (metadata.interop === "namespace") {
+        metadata.interop = "default";
+      }
+    }
   }
 
   return {
@@ -399,35 +414,7 @@ function nameAnonymousExports(programPath: NodePath) {
   // Name anonymous exported locals.
   programPath.get("body").forEach(child => {
     if (!child.isExportDefaultDeclaration()) return;
-
-    // export default foo;
-    const declaration = child.get("declaration");
-    if (declaration.isFunctionDeclaration()) {
-      if (!declaration.node.id) {
-        declaration.node.id = declaration.scope.generateUidIdentifier(
-          "default",
-        );
-      }
-    } else if (declaration.isClassDeclaration()) {
-      if (!declaration.node.id) {
-        declaration.node.id = declaration.scope.generateUidIdentifier(
-          "default",
-        );
-      }
-    } else {
-      const id = declaration.scope.generateUidIdentifier("default");
-      const namedDecl = t.exportNamedDeclaration(null, [
-        t.exportSpecifier(t.identifier(id.name), t.identifier("default")),
-      ]);
-      namedDecl._blockHoist = child.node._blockHoist;
-
-      const varDecl = t.variableDeclaration("var", [
-        t.variableDeclarator(id, declaration.node),
-      ]);
-      varDecl._blockHoist = child.node._blockHoist;
-
-      child.replaceWithMultiple([namedDecl, varDecl]);
-    }
+    splitExportDeclaration(child);
   });
 }
 

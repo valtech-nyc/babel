@@ -1149,6 +1149,12 @@
   "es7.promise.finally": {
     "chrome": "63",
     "firefox": "58",
+    "safari": "11.1",
+    "opera": "50"
+  },
+  "es7.symbol.async-iterator": {
+    "chrome": "63",
+    "firefox": "57",
     "safari": "tp",
     "opera": "50"
   }

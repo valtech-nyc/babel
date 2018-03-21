@@ -210,7 +210,7 @@ export default class Scope {
    * Generate a unique identifier and add it to the current scope.
    */
 
-  generateDeclaredUidIdentifier(name: string = "temp") {
+  generateDeclaredUidIdentifier(name?: string) {
     const id = this.generateUidIdentifier(name);
     this.push({ id });
     return t.cloneNode(id);
@@ -220,7 +220,7 @@ export default class Scope {
    * Generate a unique identifier.
    */
 
-  generateUidIdentifier(name: string = "temp") {
+  generateUidIdentifier(name?: string) {
     return t.identifier(this.generateUid(name));
   }
 
@@ -401,7 +401,7 @@ export default class Scope {
     console.log(sep);
   }
 
-  toArray(node: Object, i?: number) {
+  toArray(node: Object, i?: number | boolean) {
     const file = this.hub.file;
 
     if (t.isIdentifier(node)) {
@@ -431,14 +431,20 @@ export default class Scope {
       );
     }
 
-    let helperName = "toArray";
+    let helperName;
     const args = [node];
     if (i === true) {
+      // Used in array-spread to create an array.
       helperName = "toConsumableArray";
     } else if (i) {
       args.push(t.numericLiteral(i));
+
+      // Used in array-rest to create an array from a subset of an iterable.
       helperName = "slicedToArray";
       // TODO if (this.hub.file.isLoose("es6.forOf")) helperName += "-loose";
+    } else {
+      // Used in array-rest to create an array
+      helperName = "toArray";
     }
     return t.callExpression(file.addHelper(helperName), args);
   }

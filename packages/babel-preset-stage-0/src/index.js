@@ -1,8 +1,12 @@
+import { declare } from "@babel/helper-plugin-utils";
 import presetStage1 from "@babel/preset-stage-1";
 
 import transformFunctionBind from "@babel/plugin-proposal-function-bind";
+import transformLogicalAssignmentOperators from "@babel/plugin-proposal-logical-assignment-operators";
 
-export default function(context, opts = {}) {
+export default declare((api, opts) => {
+  api.assertVersion(7);
+
   let loose = false;
   let useBuiltIns = false;
 
@@ -22,6 +26,6 @@ export default function(context, opts = {}) {
 
   return {
     presets: [[presetStage1, { loose, useBuiltIns }]],
-    plugins: [transformFunctionBind],
+    plugins: [transformFunctionBind, transformLogicalAssignmentOperators],
   };
-}
+});
