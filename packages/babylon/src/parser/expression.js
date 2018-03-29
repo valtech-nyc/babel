@@ -1960,23 +1960,31 @@ export default class ExpressionParser extends LValParser {
 
   checkPipelineAtInfixOperator(left: N.Expression, leftStartPos: number) {
     this.expectOnePlugin(["pipelineOperator", "smartPipelines"]);
+
     if (this.hasPlugin("smartPipelines")) {
       this.checkSmartPipelineHeadEarlyErrors(left, leftStartPos);
-    } else if (this.hasPlugin("pipelineOperator")) {
-      // If `pipelineOperator` but `smartPipelines` plugin is active, then:
-      // pipelineOperator supports syntax such as `10 |> x => x + 1 |> f`
-      // grouping as `10 |> (x => x + 1) |> f`.
-      //
-      // In contrast, `smartPipelines` would require parentheses
-      // around the arrow function or else it would be invalid.
-      //
-      // Note that this means that, with pipelineOperator,
-      // `x => x |> f |> g` would be invalid, since it would group as
-      // `(x => x) |> f |> g`; this too is different from `smartPipelines`,
-      // in which `x => x |> f |> g` would be valid.
-      const startPos = this.state.start;
-      this.state.potentialArrowAt = startPos;
-      this.state.potentialSoloAwaitAt = startPos;
+    }
+
+    if (this.hasPlugin("pipelineOperator")) {
+      const lookahead = this.lookahead();
+
+      if (lookahead.type === tt.arrow) {
+        throw this.raise(
+          this.state.start,
+          `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`,
+        );
+      }
+
+      if (
+        this.match(tt.name) &&
+        this.state.value === "await" &&
+        this.state.inAsync
+      ) {
+        throw this.raise(
+          this.state.start,
+          `Unexpected "await" after pipeline body; await must have parentheses in minimal proposal`,
+        );
+      }
     }
   }
 
