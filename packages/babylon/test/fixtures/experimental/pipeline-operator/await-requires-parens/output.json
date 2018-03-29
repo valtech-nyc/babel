@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 50,
+  "end": 54,
   "loc": {
     "start": {
       "line": 1,
@@ -15,7 +15,7 @@
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 50,
+    "end": 54,
     "loc": {
       "start": {
         "line": 1,
@@ -31,7 +31,7 @@
       {
         "type": "FunctionDeclaration",
         "start": 0,
-        "end": 50,
+        "end": 54,
         "loc": {
           "start": {
             "line": 1,
@@ -65,7 +65,7 @@
         "body": {
           "type": "BlockStatement",
           "start": 21,
-          "end": 50,
+          "end": 54,
           "loc": {
             "start": {
               "line": 1,
@@ -80,7 +80,7 @@
             {
               "type": "ReturnStatement",
               "start": 25,
-              "end": 48,
+              "end": 52,
               "loc": {
                 "start": {
                   "line": 2,
@@ -88,13 +88,13 @@
                 },
                 "end": {
                   "line": 2,
-                  "column": 25
+                  "column": 29
                 }
               },
               "argument": {
                 "type": "BinaryExpression",
                 "start": 32,
-                "end": 47,
+                "end": 51,
                 "loc": {
                   "start": {
                     "line": 2,
@@ -102,13 +102,13 @@
                   },
                   "end": {
                     "line": 2,
-                    "column": 24
+                    "column": 28
                   }
                 },
                 "left": {
                   "type": "BinaryExpression",
                   "start": 32,
-                  "end": 42,
+                  "end": 46,
                   "loc": {
                     "start": {
                       "line": 2,
@@ -116,7 +116,7 @@
                     },
                     "end": {
                       "line": 2,
-                      "column": 19
+                      "column": 23
                     }
                   },
                   "left": {
@@ -139,37 +139,58 @@
                   "operator": "|>",
                   "right": {
                     "type": "AwaitExpression",
-                    "start": 37,
-                    "end": 42,
+                    "start": 38,
+                    "end": 45,
                     "loc": {
                       "start": {
                         "line": 2,
-                        "column": 14
+                        "column": 15
                       },
                       "end": {
                         "line": 2,
-                        "column": 19
+                        "column": 22
                       }
+                    },
+                    "argument": {
+                      "type": "Identifier",
+                      "start": 44,
+                      "end": 45,
+                      "loc": {
+                        "start": {
+                          "line": 2,
+                          "column": 21
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 22
+                        },
+                        "identifierName": "f"
+                      },
+                      "name": "f"
+                    },
+                    "extra": {
+                      "parenthesized": true,
+                      "parenStart": 37
                     }
                   }
                 },
                 "operator": "|>",
                 "right": {
                   "type": "Identifier",
-                  "start": 46,
-                  "end": 47,
+                  "start": 50,
+                  "end": 51,
                   "loc": {
                     "start": {
                       "line": 2,
-                      "column": 23
+                      "column": 27
                     },
                     "end": {
                       "line": 2,
-                      "column": 24
+                      "column": 28
                     },
-                    "identifierName": "f"
+                    "identifierName": "g"
                   },
-                  "name": "f"
+                  "name": "g"
                 }
               }
             }
