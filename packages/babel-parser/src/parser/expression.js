@@ -331,11 +331,8 @@ export default class ExpressionParser extends LValParser {
     const prec = this.state.type.binop;
     if (prec != null && (!noIn || !this.match(tt._in))) {
       if (prec > minPrec) {
-        const operator = this.state.value;
-        if (operator === "|>" && this.state.inFSharpPipelineDirectBody) {
-          return left;
-        }
         const node = this.startNodeAt(leftStartPos, leftStartLoc);
+        const operator = this.state.value;
         node.left = left;
         node.operator = operator;
         if (
@@ -409,23 +406,18 @@ export default class ExpressionParser extends LValParser {
     prec: number,
     noIn: ?boolean,
   ): N.Expression {
-    const startPos = this.state.start;
-    const startLoc = this.state.startLoc;
     switch (op) {
       case tt.pipeline:
-        switch (this.getPluginOption("pipelineOperator", "proposal")) {
-          case "smart":
-            return this.withTopicPermittingContext(() => {
-              return this.parseSmartPipelineBody(
-                this.parseExprOpBaseRightExpr(op, prec, noIn),
-                startPos,
-                startLoc,
-              );
-            });
-          case "fsharp":
-            return this.withSoloAwaitPermittingContext(() => {
-              return this.parseFSharpPipelineBody(prec, noIn);
-            });
+        if (this.getPluginOption("pipelineOperator", "proposal") === "smart") {
+          const startPos = this.state.start;
+          const startLoc = this.state.startLoc;
+          return this.withTopicPermittingContext(() => {
+            return this.parseSmartPipelineBody(
+              this.parseExprOpBaseRightExpr(op, prec, noIn),
+              startPos,
+              startLoc,
+            );
+          });
         }
       // falls through
 
@@ -774,8 +766,6 @@ export default class ExpressionParser extends LValParser {
     const elts = [];
     let innerParenStart;
     let first = true;
-    const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
-    this.state.inFSharpPipelineDirectBody = false;
 
     while (!this.eat(close)) {
       if (first) {
@@ -813,8 +803,6 @@ export default class ExpressionParser extends LValParser {
     if (possibleAsyncArrow && innerParenStart && this.shouldParseAsyncArrow()) {
       this.unexpected();
     }
-
-    this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
 
     return elts;
   }
@@ -981,10 +969,7 @@ export default class ExpressionParser extends LValParser {
       case tt.parenL:
         return this.parseParenAndDistinguishExpression(canBeArrow);
 
-      case tt.bracketL: {
-        const oldInFSharpPipelineDirectBody = this.state
-          .inFSharpPipelineDirectBody;
-        this.state.inFSharpPipelineDirectBody = false;
+      case tt.bracketL:
         node = this.startNode();
         this.next();
         node.elements = this.parseExprList(
@@ -1000,17 +985,11 @@ export default class ExpressionParser extends LValParser {
           // expression by calling toReferencedListDeep.
           this.toReferencedList(node.elements);
         }
-        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
         return this.finishNode(node, "ArrayExpression");
-      }
-      case tt.braceL: {
-        const oldInFSharpPipelineDirectBody = this.state
-          .inFSharpPipelineDirectBody;
-        this.state.inFSharpPipelineDirectBody = false;
-        const ret = this.parseObj(false, refShorthandDefaultPos);
-        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
-        return ret;
-      }
+
+      case tt.braceL:
+        return this.parseObj(false, refShorthandDefaultPos);
+
       case tt._function:
         return this.parseFunctionExpression();
 
@@ -1201,11 +1180,9 @@ export default class ExpressionParser extends LValParser {
     const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
     const oldYieldPos = this.state.yieldPos;
     const oldAwaitPos = this.state.awaitPos;
-    const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
     this.state.maybeInArrowParameters = true;
     this.state.yieldPos = 0;
     this.state.awaitPos = 0;
-    this.state.inFSharpPipelineDirectBody = false;
 
     const innerStartPos = this.state.start;
     const innerStartLoc = this.state.startLoc;
@@ -1259,7 +1236,6 @@ export default class ExpressionParser extends LValParser {
     this.expect(tt.parenR);
 
     this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
-    this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
 
     let arrowNode = this.startNodeAt(startPos, startLoc);
     if (
@@ -2141,9 +2117,7 @@ export default class ExpressionParser extends LValParser {
       );
     }
 
-    if (!this.state.soloAwait) {
-      node.argument = this.parseMaybeUnary();
-    }
+    node.argument = this.parseMaybeUnary();
     return this.finishNode(node, "AwaitExpression");
   }
 
@@ -2333,17 +2307,6 @@ export default class ExpressionParser extends LValParser {
     }
   }
 
-  withSoloAwaitPermittingContext<T>(callback: () => T): T {
-    const outerContextSoloAwaitState = this.state.soloAwait;
-    this.state.soloAwait = true;
-
-    try {
-      return callback();
-    } finally {
-      this.state.soloAwait = outerContextSoloAwaitState;
-    }
-  }
-
   // Register the use of a primary topic reference (`#`) within the current
   // topic context.
   registerTopicReference(): void {
@@ -2359,26 +2322,5 @@ export default class ExpressionParser extends LValParser {
       this.state.topicContext.maxTopicIndex != null &&
       this.state.topicContext.maxTopicIndex >= 0
     );
-  }
-
-  parseFSharpPipelineBody(prec: number, noIn: ?boolean): N.Expression {
-    const startPos = this.state.start;
-    const startLoc = this.state.startLoc;
-
-    this.state.potentialArrowAt = this.state.start;
-    const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
-    this.state.inFSharpPipelineDirectBody = true;
-
-    const ret = this.parseExprOp(
-      this.parseMaybeUnary(),
-      startPos,
-      startLoc,
-      prec,
-      noIn,
-    );
-
-    this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
-
-    return ret;
   }
 }
